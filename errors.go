@@ -284,6 +284,15 @@ func (w *withMessage) Unwrap() error { return w.cause }
 
 // ywh:
 
+// 推荐用法 1：
+// - 在错误最开始处使用 errors.WithCode() 创建一个 withCode 类型的错误。
+// - 上层在处理底层返回的错误时，可根据需要使用 Wrap 函数基于该错误封装新的错误信息。
+// - 如果要包装的 error 不是用本 error 包创建的，建议用 errors.WithCode() 新建一个 error。
+// 推荐用法 2：
+// - 在错误产生的最原始位置调用日志包记录函数打印错误信息，其他位置直接返回（或选择性追加错误信息，方便故障定位）。
+// - 只在错误产生的最初位置打印日志，其他地方直接返回错误，一般不需要再对错误进行封装。
+// - 当代码调用第三方包的函数时，第三方包函数出错则打印错误信息。
+
 // Format 支持打印不同格式的错误信息。
 // 参考：https://static001.geekbang.org/resource/image/18/5c/18a93313e017d4f3b21370099d011c5c.png
 func (w *withMessage) Format(s fmt.State, verb rune) {
@@ -321,8 +330,7 @@ func WithCode(code int, format string, args ...interface{}) error {
 	}
 }
 
-// WrapC
-// ywh: 将 error 封装成 withCode 类型的错误。
+// WrapC 将 error 封装成 withCode 类型的错误。
 func WrapC(err error, code int, format string, args ...interface{}) error {
 	if err == nil {
 		return nil
@@ -335,31 +343,6 @@ func WrapC(err error, code int, format string, args ...interface{}) error {
 		stack: callers(),
 	}
 }
-
-// Example:
-//
-//func bindUser() error {
-//	if err := getUser(); err != nil {
-//		// Step3: Wrap the error with a new error message and a new error code if needed.
-//		return WrapC(err, ErrEncodingFailed, "encoding user 'Lingfei Kong' failed.")
-//	}
-//
-//	return nil
-//}
-//
-//func getUser() error {
-//	if err := queryDatabase(); err != nil {
-//		// Step2: Wrap the error with a new error message.
-//		return Wrap(err, "get user failed.")
-//	}
-//
-//	return nil
-//}
-//
-//func queryDatabase() error {
-//	// Step1. Create error with specified error code.
-//	return WithCode(ErrDatabase, "user 'Lingfei Kong' not found.")
-//}
 
 // Error return the externally-safe error message.
 func (w *withCode) Error() string { return fmt.Sprintf("%v", w) }
