@@ -26,6 +26,7 @@ type Coder interface {
 }
 
 type defaultCoder struct {
+
 	// C refers to the integer code of the ErrCode.
 	C int
 
@@ -38,6 +39,8 @@ type defaultCoder struct {
 	// Ref specify the reference document.
 	Ref string
 }
+
+var _ = (*defaultCoder)(nil)
 
 // Code returns the integer code of the coder.
 func (coder defaultCoder) Code() int {
@@ -65,6 +68,11 @@ func (coder defaultCoder) HTTPStatus() int {
 func (coder defaultCoder) Reference() string {
 	return coder.Ref
 }
+
+// ywh:
+// 使用错误包时，需要调用 Register 或 MustRegister，将 Coder 注册到 codes 中，才能填充业务错误码。
+// withCode 的 Format 方法即可通过 withCode 的 code 字段获取到对应的 Coder，
+// 并通过 Coder 提供的 HTTPStatus、String、Reference、Code 函数获取 withCode 中 code 的详细信息，最后格式化打印。
 
 // codes contains a map of error codes to metadata.
 var codes = map[int]Coder{}

@@ -282,6 +282,10 @@ func (w *withMessage) Cause() error  { return w.cause }
 // Unwrap provides compatibility for Go 1.13 error chains.
 func (w *withMessage) Unwrap() error { return w.cause }
 
+// ywh:
+
+// Format 支持打印不同格式的错误信息。
+// 参考：https://static001.geekbang.org/resource/image/18/5c/18a93313e017d4f3b21370099d011c5c.png
 func (w *withMessage) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
@@ -296,13 +300,19 @@ func (w *withMessage) Format(s fmt.State, verb rune) {
 	}
 }
 
+// withCode
 type withCode struct {
-	err   error
-	code  int
+	// error 错误
+	err error
+	// 业务错误码
+	code int
+	// cause error
 	cause error
+	// 错误堆栈
 	*stack
 }
 
+// WithCode 创建 withCode 类型错误。
 func WithCode(code int, format string, args ...interface{}) error {
 	return &withCode{
 		err:   fmt.Errorf(format, args...),
@@ -311,6 +321,8 @@ func WithCode(code int, format string, args ...interface{}) error {
 	}
 }
 
+// WrapC
+// ywh: 将 error 封装成 withCode 类型的错误。
 func WrapC(err error, code int, format string, args ...interface{}) error {
 	if err == nil {
 		return nil
@@ -323,6 +335,31 @@ func WrapC(err error, code int, format string, args ...interface{}) error {
 		stack: callers(),
 	}
 }
+
+// Example:
+//
+//func bindUser() error {
+//	if err := getUser(); err != nil {
+//		// Step3: Wrap the error with a new error message and a new error code if needed.
+//		return WrapC(err, ErrEncodingFailed, "encoding user 'Lingfei Kong' failed.")
+//	}
+//
+//	return nil
+//}
+//
+//func getUser() error {
+//	if err := queryDatabase(); err != nil {
+//		// Step2: Wrap the error with a new error message.
+//		return Wrap(err, "get user failed.")
+//	}
+//
+//	return nil
+//}
+//
+//func queryDatabase() error {
+//	// Step1. Create error with specified error code.
+//	return WithCode(ErrDatabase, "user 'Lingfei Kong' not found.")
+//}
 
 // Error return the externally-safe error message.
 func (w *withCode) Error() string { return fmt.Sprintf("%v", w) }
